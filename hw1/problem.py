@@ -64,7 +64,12 @@ def unicycle_control(state, config):
         theta_dot = config.heading_gain * heading_error
     else:
         # TODO(student, Problem 2.1): Implement the errors and [v_dot, theta_dot].
-        raise NotImplementedError("Implement Problem 2.1: unicycle_control")
+        desired_heading = np.arctan2(error[1], error[0])
+        heading_error = wrap_angle(desired_heading - heading)
+        desired_velocity = max(0.0, np.cos(heading_error)) * min(distance, config.max_velocity)
+        v_dot = config.velocity_gain * (desired_velocity - velocity)
+        theta_dot = config.heading_gain * heading_error
+
     return np.array(
         [
             np.clip(v_dot, -config.max_acceleration, config.max_acceleration),
@@ -76,14 +81,32 @@ def unicycle_control(state, config):
 def bicycle_initial_state(unicycle_state):
     """Problem 2.2: map [p_x,p_y,v,theta] into the bicycle state."""
     # TODO(student, Problem 2.2): Return [X,Y,v_x,v_y,r,psi].
-    raise NotImplementedError("Implement Problem 2.2: bicycle_initial_state")
+    p_x, p_y, v, theta = unicycle_state
+    return [
+        p_x,  # X
+        p_y,  # Y
+        v * np.cos(theta),  # v_x
+        0.0,  # v_y
+        0.0,  # r
+        theta,  # psi
+    ]
 
 
 def bicycle_control(state, config):
     """Problem 2.2: implement the provided pure-rolling command conversion."""
     # TODO(student, Problem 2.2): Implement the conversion given in problem_2.tex.
-    raise NotImplementedError("Implement Problem 2.2: bicycle_control")
+    X, Y, v_x, v_y, r, psi = state
 
+    virtual_state = np.array([X, Y, v_x, psi])
+    v_dot, theta_dot = unicycle_control(virtual_state, config)
+
+    a_x = v_dot
+    L= DEFAULT_BICYCLE_PARAMS.front_length + DEFAULT_BICYCLE_PARAMS.rear_length
+
+    delta = np.arctan2(L * theta_dot, v_x) 
+    delta = np.clip(delta, -DEFAULT_BICYCLE_PARAMS.steering_limit, DEFAULT_BICYCLE_PARAMS.steering_limit)
+
+    return np.array([a_x, delta])
 
 class ComparisonPipeline:
     def __init__(self, config=DEFAULT_CONFIG, output_dir=OUTPUT_DIR):

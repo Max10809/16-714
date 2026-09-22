@@ -37,7 +37,31 @@ def linearize_about_reference(reference_state: np.ndarray) -> tuple[np.ndarray, 
 
     # TODO(student, Problem 1.5): Derive and implement the affine
     # linearization about the general state [p_x^r, p_y^r, v^r, theta^r].
-    raise NotImplementedError("Implement Problem 1.5 linearize_about_reference")
+    px, py, speed, theta = reference_state
+    a = np.array([
+        [1.0, 0.0, DT * np.cos(theta), -DT * speed * np.sin(theta)],
+        [0.0, 1.0, DT * np.sin(theta),  DT * speed * np.cos(theta)],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ])
+
+    b = np.array([
+        [0.0, 0.0],
+        [0.0, 0.0],
+        [DT,  0.0],
+        [0.0, DT],
+    ])
+
+    reference_next = np.array([
+        px + DT * speed * np.cos(theta),
+        py + DT * speed * np.sin(theta),
+        speed,
+        theta,
+    ])
+
+    c = reference_next - a @ reference_state
+
+    return a, b, c
 
 
 # %% Student mathematical implementation: backward propagation
@@ -48,8 +72,7 @@ def riccati_step(
 
     # TODO(student, Problem 1.5): Implement the Riccati recursion and LQR
     # gain. Solve the control Hessian system without forming its inverse.
-    raise NotImplementedError("Implement Problem 1.5 riccati_step")
-
+    
 
 def backward_propagation(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     p_matrices = np.zeros((NUM_STATE_SAMPLES, 4, 4))

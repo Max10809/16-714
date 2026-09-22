@@ -97,7 +97,16 @@ def backward_step(
     # TODO(student, Problem 1.4): Implement the implicit optimal-control solve
     # and first-order co-state/Riccati update. Use np.linalg.solve rather than
     # forming an explicit numerical inverse.
-    raise NotImplementedError("Implement Problem 1.4 backward_step")
+    control_hessian = R + b.T @ p_next @ b
+    g_current = np.linalg.solve(control_hessian, b.T @ p_next, )
+    p_current = (
+        Q
+        + a_goal.T
+        @ p_next
+        @ (np.eye(p_next.shape[0]) - b @ g_current)
+        @ a_goal
+    )
+    return p_current, g_current
 
 
 def backward_propagation(a_goal: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -122,7 +131,11 @@ def forward_step(
 
     # TODO(student, Problem 1.4): Evaluate the nonlinear symbolic policy,
     # propagate the nonlinear Euler dynamics, and evaluate lambda_k.
-    raise NotImplementedError("Implement Problem 1.4 forward_step")
+    uncontrolled_next_state = uncontrolled_step(state)
+    control = -policy_coefficient @ (uncontrolled_next_state - X_GOAL)
+    next_state = nonlinear_step(state, control, b)
+    costate = p_current @ (next_state - X_GOAL)
+    return control, next_state, costate
 
 
 def forward_simulation(
