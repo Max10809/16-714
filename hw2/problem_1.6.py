@@ -75,7 +75,18 @@ def nonlinear_lqr_step(
 
     # TODO(student, Problem 1.6): Evaluate the Question 1.5 LQR control law,
     # apply it to the original nonlinear dynamics, and evaluate lambda_k.
-    raise NotImplementedError("Implement Problem 1.6 nonlinear_lqr_step")
+    error = state - X_GOAL
+
+    # Use the LQR gain computed in Question 1.5.
+    control = -gain @ error
+
+    # Propagate the original nonlinear dynamics.
+    next_state = nonlinear_step(state, control)
+
+    # Evaluate the approximate co-state from the LQR value model.
+    costate = p_current @ error
+
+    return control, next_state, costate
 
 
 def forward_simulation(
