@@ -72,7 +72,15 @@ def riccati_step(
 
     # TODO(student, Problem 1.5): Implement the Riccati recursion and LQR
     # gain. Solve the control Hessian system without forming its inverse.
-    
+    control_hessian = R + b.T @ p_next @ b
+    gain = np.linalg.solve(
+        control_hessian,
+        b.T @ p_next @ a,
+    )
+
+    p_current = Q + a.T @ p_next @ (a - b @ gain)
+
+    return p_current, gain
 
 def backward_propagation(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     p_matrices = np.zeros((NUM_STATE_SAMPLES, 4, 4))
@@ -96,7 +104,15 @@ def lqr_forward_step(
 
     # TODO(student, Problem 1.5): Evaluate the optimal LQR law, propagate the
     # affine linear model, and evaluate the co-state.
-    raise NotImplementedError("Implement Problem 1.5 lqr_forward_step")
+    error = state - X_GOAL
+
+    control = -gain @ error
+
+    next_state = affine_offset + a @ state + b @ control
+
+    costate = p_current @ error
+
+    return control, next_state, costate
 
 
 def forward_simulation(
