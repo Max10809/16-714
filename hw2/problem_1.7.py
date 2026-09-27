@@ -106,7 +106,20 @@ def delta_stage_step(
     # b_k and the two control coefficients K_k and k_ff_k.
     # Keep d_k (the four-state dynamics defect) distinct from k_ff_k.
     # Use np.linalg.solve for the two control-Hessian systems.
-    raise NotImplementedError("Implement Problem 1.7 delta_stage_step")
+    H = R + B.T @ P_next @ B
+    C = B.T @ P_next @ A_k
+    z = P_next @ d_k + b_next
+
+    K_k = np.linalg.solve(H, C)
+    k_ff_k = np.linalg.solve(H, r_k + B.T @ z)
+
+    P_k = Q + A_k.T @ P_next @ A_k - C.T @ K_k
+    b_k = q_k + A_k.T @ z - C.T @ k_ff_k
+
+    # Remove numerical asymmetry.
+    P_k = 0.5 * (P_k + P_k.T)
+
+    return P_k, b_k, K_k, k_ff_k
 
 
 def delta_model_terms(
@@ -165,7 +178,8 @@ def delta_control_law(
     # delta-control correction in the question. Use the passed step_size
     # exactly once on k_ff_k; leave K_k unscaled. Do not add a nominal
     # control or simulate the dynamics here; rollout_update handles both.
-    raise NotImplementedError("Implement Problem 1.7 delta_control_law")
+    delta_x = state - nominal_state
+    return -K_k @ delta_x - step_size * k_ff_k
 
 
 # %% Provided nonlinear rollout and local co-state evaluation.

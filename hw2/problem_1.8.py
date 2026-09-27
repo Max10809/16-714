@@ -125,7 +125,12 @@ def solve_ilqr(step_size: float = STEP_SIZE) -> dict:
         # and the passed step_size. Unpack new_states, new_controls, and
         # new_costates. Read old_cost from metrics[-1]["cost"] and compute
         # new_cost with trajectory_cost on the updated trajectory.
-        raise NotImplementedError("Implement Problem 1.8 backward/forward iteration")
+        backward = delta_backward_pass(states, controls)
+        new_states, new_controls, new_costates = rollout_update(
+            states, controls, backward, step_size
+        )
+        old_cost = metrics[-1]["cost"]
+        new_cost = trajectory_cost(new_states, new_controls)
 
         # Provided finite-value guard and trajectory-change diagnostics.
         if not (np.isfinite(new_cost) and np.all(np.isfinite(new_states))
@@ -139,8 +144,12 @@ def solve_ilqr(step_size: float = STEP_SIZE) -> dict:
         # using the signed, normalized decrease in the problem statement.
         # Make new_states and new_controls the next nominal states and
         # controls. Retain them even when new_cost is larger than old_cost.
-        raise NotImplementedError("Implement Problem 1.8 cost decrease and nominal update")
-
+        relative_cost_decrease = (
+            (old_cost - new_cost) / max(1.0, abs(old_cost))
+        )
+        states = new_states
+        controls = new_controls
+        
         # Provided storage: record the completed update before testing convergence.
         state_history.append(states.copy())
         control_history.append(controls.copy())
@@ -155,7 +164,9 @@ def solve_ilqr(step_size: float = STEP_SIZE) -> dict:
         # guard and strict upper bound using RELATIVE_COST_TOLERANCE.
         # If satisfied, set stop_reason = "relative_cost_tolerance" and
         # break. Otherwise continue, including after a cost increase.
-        raise NotImplementedError("Implement Problem 1.8 termination condition")
+        if 0.0 <= relative_cost_decrease < RELATIVE_COST_TOLERANCE:
+            stop_reason = "relative_cost_tolerance"
+            break
 
     return {
         "states": np.asarray(state_history), "controls": np.asarray(control_history),
