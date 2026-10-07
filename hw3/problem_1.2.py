@@ -29,7 +29,28 @@ def lifted_dynamics(a, b, horizon):
     For n states and m inputs, return shapes ((N+1)*n,n) and ((N+1)*n,N*m).
     """
     # TODO(student, Problem 1.2): Implement the lifted dynamics derived in Question 1.1.
-    raise NotImplementedError("Implement Problem 1.2 lifted_dynamics")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if b.ndim == 1:
+        b = b.reshape(-1, 1)
+
+    n, m = b.shape
+    f = np.zeros(((horizon + 1) * n, n))
+    g = np.zeros(((horizon + 1) * n, horizon * m))
+
+    # Initial state: x0 = I @ x0 + 0 @ U.
+    f[:n, :] = np.eye(n)
+
+    for i in range(1, horizon + 1):
+        prev = slice((i - 1) * n, i * n)
+        curr = slice(i * n, (i + 1) * n)
+
+        # xi = A @ x_(i-1) + B @ u_(i-1).
+        f[curr, :] = a @ f[prev, :]
+        g[curr, :] = a @ g[prev, :]
+        g[curr, (i - 1) * m:i * m] = b
+
+    return f, g
 
 
 def feasibility_constraints(state, f, g, state_bound, input_bound):
@@ -39,7 +60,35 @@ def feasibility_constraints(state, f, g, state_bound, input_bound):
     Include both sides of every state and input bound, including x0 and x_N.
     """
     # TODO(student, Problem 1.2): Construct the lifted state/input inequalities derived in Question 1.1.
-    raise NotImplementedError("Implement Problem 1.2 feasibility_constraints")
+    state = np.asarray(state, dtype=float).reshape(-1)
+    n = state.size
+    num_states = f.shape[0] // n
+    num_controls = g.shape[1]
+
+    # Repeat bounds for every predicted state and control.
+    state_bound = np.broadcast_to(
+        np.asarray(state_bound, dtype=float).reshape(-1), (n,)
+    )
+    bx = np.tile(state_bound, num_states)
+    bu = np.full(num_controls, float(np.asarray(input_bound).item()))
+
+    free_response = f @ state
+    identity = np.eye(num_controls)
+
+    a_ineq = np.vstack([
+        g,
+        -g,
+        identity,
+        -identity,
+    ])
+    b_ineq = np.concatenate([
+        bx - free_response,
+        bx + free_response,
+        bu,
+        bu,
+    ])
+
+    return a_ineq, b_ineq
 
 
 # %% Provided grid sampling, plotting, and saving

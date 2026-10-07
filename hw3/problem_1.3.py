@@ -30,7 +30,54 @@ def predecessor_intersection(matrix, bound, a, b, state_bound, input_bound):
     eliminate_scalar helper projects out u. Finally intersect with X.
     """
     # TODO(student, Problem 1.3): Form the constrained predecessor and intersect it with the state box.
-    raise NotImplementedError("Implement Problem 1.3 predecessor_intersection")
+    matrix = np.asarray(matrix, dtype=float)
+    bound = np.asarray(bound, dtype=float).reshape(-1)
+    a = np.asarray(a, dtype=float)
+
+    n = a.shape[0]
+    b = np.asarray(b, dtype=float).reshape(n, 1)
+
+    state_bound = np.broadcast_to(
+    np.asarray(state_bound, dtype=float).reshape(-1), (n,)
+    )
+    input_bound = float(np.asarray(input_bound).item())
+
+    successor_matrix = np.hstack([
+        matrix @ a,
+        matrix @ b,
+    ])
+    
+    input_matrix = np.zeros((2, n + 1))
+    input_matrix[0, -1] = 1.0
+    input_matrix[1, -1] = -1.0
+
+    joint_matrix = np.vstack([
+        successor_matrix,
+        input_matrix,
+    ])
+    joint_bound = np.concatenate([
+        bound,
+        [input_bound, input_bound],
+    ])
+
+    # Project out u to obtain Pre(C).
+    pre_matrix, pre_bound = helpers.eliminate_scalar(
+        joint_matrix, joint_bound
+    )
+
+    # Intersect Pre(C) with X = {x: -state_bound <= x <= state_bound}.
+    new_matrix = np.vstack([
+        pre_matrix,
+        np.eye(n),
+        -np.eye(n),
+    ])
+    new_bound = np.concatenate([
+        np.asarray(pre_bound).reshape(-1),
+        state_bound,
+        state_bound,
+    ])
+
+    return new_matrix, new_bound
 
 
 # %% Provided fixed-point iteration, plotting, and saving
