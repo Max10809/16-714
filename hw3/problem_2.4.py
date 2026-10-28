@@ -36,13 +36,27 @@ def riccati_step(p, a, b, q, r, cross_term):
     Use a linear solve, not an explicit inverse; return a symmetric matrix.
     """
     # TODO(student, Problem 2.4): Implement the Riccati equation derived in Question 2.3.
-    raise NotImplementedError("Implement Problem 2.4 riccati_step")
+    control_matrix = r + b.T @ p @ b
+    cross_matrix = b.T @ p @ a + cross_term.T
+
+    gain = np.linalg.solve(control_matrix, cross_matrix)
+
+    updated = (
+        q + a.T @ p @ a
+        - (a.T @ p @ b + cross_term) @ gain
+    )
+
+    return 0.5 * (updated + updated.T)
+
 
 
 def feedback_gain(p, a, b, r, cross_term):
     """Return K for the convention u=-Kx, using the converged P."""
     # TODO(student, Problem 2.4): Implement the control gain derived in Question 2.2.
-    raise NotImplementedError("Implement Problem 2.4 feedback_gain")
+    control_matrix = r + b.T @ p @ b
+    cross_matrix = b.T @ p @ a + cross_term.T
+
+    return np.linalg.solve(control_matrix, cross_matrix)
 
 
 # %% Provided fixed-point driver

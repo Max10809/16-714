@@ -46,7 +46,26 @@ def lifted_dynamics(a, b, horizon):
     You may reuse your own implementation from Question 1.2 here.
     """
     # TODO(student, Problem 1.4): Implement the lifted dynamics derived in Question 1.1.
-    raise NotImplementedError("Implement Problem 1.4 lifted_dynamics")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if b.ndim == 1:
+        b = b.reshape(-1, 1)
+
+    n, m = b.shape
+    f = np.zeros(((horizon + 1) * n, n))
+    g = np.zeros(((horizon + 1) * n, horizon * m))
+
+    f[:n, :] = np.eye(n)
+
+    for i in range(1, horizon + 1):
+        prev = slice((i - 1) * n, i * n)
+        curr = slice(i * n, (i + 1) * n)
+
+        f[curr, :] = a @ f[prev, :]
+        g[curr, :] = a @ g[prev, :]
+        g[curr, (i - 1) * m:i * m] = b
+
+    return f, g
 
 
 def cost_matrices(q, r, s, horizon):
@@ -56,7 +75,20 @@ def cost_matrices(q, r, s, horizon):
     the matrices have shapes ((N+1)*n,(N+1)*n) and (N*m,N*m).
     """
     # TODO(student, Problem 1.4): Implement the cost matrices derived in Question 1.1.
-    raise NotImplementedError("Implement Problem 1.4 cost_matrices")
+    q = np.asarray(q, dtype=float)
+    r = np.atleast_2d(np.asarray(r, dtype=float))
+    s = np.asarray(s, dtype=float)
+
+    n = q.shape[0]
+
+    # Q for x0,...,x_(N-1), and S for x_N.
+    qbar = np.kron(np.eye(horizon + 1), q)
+    qbar[-n:, -n:] = s
+
+    # R for u0,...,u_(N-1).
+    rbar = np.kron(np.eye(horizon), r)
+
+    return qbar, rbar
 
 
 def condensed_qp_matrices(g, qbar, rbar):
@@ -67,7 +99,21 @@ def condensed_qp_matrices(g, qbar, rbar):
     consistent constraint row order in this function and online_qp_terms.
     """
     # TODO(student, Problem 1.4): Form the condensed quadratic cost and state/input constraint matrix.
-    raise NotImplementedError("Implement Problem 1.4 condensed_qp_matrices")
+    c = g.T @ qbar
+    h = c @ g + rbar
+
+    # Remove floating-point asymmetry.
+    h = 0.5 * (h + h.T)
+
+    identity = np.eye(g.shape[1])
+    a_ineq = np.vstack([
+        g,
+        -g,
+        identity,
+        -identity,
+    ])
+
+    return h, c, a_ineq
 
 
 def online_qp_terms(state, reference, f, gradient_map, state_bound, input_bound):
@@ -78,7 +124,33 @@ def online_qp_terms(state, reference, f, gradient_map, state_bound, input_bound)
     State bounds include the current x_k and the predicted terminal x_(k+N).
     """
     # TODO(student, Problem 1.4): Insert the current state and moving reference window into the QP.
-    raise NotImplementedError("Implement Problem 1.4 online_qp_terms")
+    state = np.asarray(state, dtype=float).reshape(-1)
+    reference = np.asarray(reference, dtype=float).reshape(-1, order="C")
+
+    n = state.size
+    num_states = f.shape[0] // n
+    num_controls = gradient_map.shape[0]
+
+    free_response = f @ state
+    gradient = gradient_map @ (free_response - reference)
+
+    state_bound = np.broadcast_to(
+        np.asarray(state_bound, dtype=float).reshape(-1), (n,)
+    )
+    bx = np.tile(state_bound, num_states)
+    bu = np.full(
+        num_controls, float(np.asarray(input_bound).item())
+    )
+
+    # Row order matches [G; -G; I; -I].
+    bounds = np.concatenate([
+        bx - free_response,
+        bx + free_response,
+        bu,
+        bu,
+    ])
+
+    return gradient, bounds
 
 
 # %% Provided solver, receding-horizon rollout, plotting, and saving
