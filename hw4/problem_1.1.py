@@ -23,8 +23,12 @@ OUTPUT_DIR = HERE / "results" / "student_problem_1_1"
 def disturbed_step(state, control, disturbance, a, b):
     """Return the next physical state for the disturbed plant."""
     # TODO(student, Problem 1.1): Implement disturbed_step using your derivation.
-    raise NotImplementedError("Implement Problem 1.1 disturbed_step")
-
+    state = np.asarray(state, dtype=float).reshape(2)
+    b = np.asarray(b, dtype=float).reshape(2)
+    total_input = float(np.asarray(control).item()) + float(
+        np.asarray(disturbance).item()
+    )
+    return a @ state + b * total_input
 
 # %% Provided experiment and output
 

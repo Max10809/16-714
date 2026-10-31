@@ -26,7 +26,19 @@ def lqr_feedback(a, b, q, r):
 
     Use the control convention u = -K x."""
     # TODO(student, Problem 1.5): Implement lqr_feedback using your derivation.
-    raise NotImplementedError("Implement Problem 1.5 lqr_feedback")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float).reshape(a.shape[0], -1)
+    q = np.asarray(q, dtype=float)
+    r = np.asarray(r, dtype=float).reshape(b.shape[1], b.shape[1])
+
+    p = solve_discrete_are(a, b, q, r)
+    k = np.linalg.solve(
+        r + b.T @ p @ b,
+        b.T @ p @ a,
+    )
+    a_cl = a - b @ k
+
+    return p, k, a_cl
 
 
 # %% Provided experiment and output

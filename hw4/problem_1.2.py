@@ -27,8 +27,10 @@ def trajectory_error(nominal_states, actual_states):
     Each row contains position and velocity. The first row is zero; the
     written stack in Question 1.2 omits that row, while Question 1.4 retains it."""
     # TODO(student, Problem 1.2): Implement trajectory_error using your derivation.
-    raise NotImplementedError("Implement Problem 1.2 trajectory_error")
-
+    return (
+        np.asarray(nominal_states, dtype=float)
+        - np.asarray(actual_states, dtype=float)
+    )
 
 # %% Provided experiment and output
 

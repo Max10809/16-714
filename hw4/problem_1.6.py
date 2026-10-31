@@ -27,7 +27,19 @@ def lifted_error_matrix(a_cl, b, horizon):
     Stack states in time order with adjacent position and velocity components.
     For horizon 100, return shape (202,100), using your model from Question 1.4."""
     # TODO(student, Problem 1.6): Implement lifted_error_matrix using your derivation.
-    raise NotImplementedError("Implement Problem 1.6 lifted_error_matrix")
+    a_cl = np.asarray(a_cl, dtype=float)
+    n = a_cl.shape[0]
+    b = np.asarray(b, dtype=float).reshape(n)
+
+    g = np.zeros((n * (horizon + 1), horizon))
+
+    for i in range(horizon):
+        block = b.copy()
+        for k in range(i + 1, horizon + 1):
+            g[n * k:n * (k + 1), i] = block
+            block = a_cl @ block
+
+    return g
 
 
 def learning_gain(lifted_matrix):
@@ -35,7 +47,7 @@ def learning_gain(lifted_matrix):
 
     For this stacking convention, its shape is (100,202)."""
     # TODO(student, Problem 1.6): Implement learning_gain using your derivation.
-    raise NotImplementedError("Implement Problem 1.6 learning_gain")
+    return np.linalg.pinv(lifted_matrix)
 
 
 # %% Provided experiment and output

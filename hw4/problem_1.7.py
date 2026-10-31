@@ -25,13 +25,22 @@ TRIAL_DIR = HERE / "results" / "student_problem_1_1"
 def disturbed_step(state, control, disturbance, a, b):
     """Reuse your own disturbed-plant implementation from Question 1.1."""
     # TODO(student, Problem 1.7): Implement disturbed_step using your derivation.
-    raise NotImplementedError("Implement Problem 1.7 disturbed_step")
+    state = np.asarray(state, dtype=float).reshape(2)
+    b = np.asarray(b, dtype=float).reshape(2)
+    total_input = float(np.asarray(control).item()) + float(
+        np.asarray(disturbance).item()
+    )
+    return a @ state + b * total_input
 
 
 def trajectory_error(nominal_states, actual_states):
     """Reuse your own error calculation from Question 1.2, including the zero initial row."""
     # TODO(student, Problem 1.7): Implement trajectory_error using your derivation.
-    raise NotImplementedError("Implement Problem 1.7 trajectory_error")
+    return (
+        np.asarray(nominal_states, dtype=float)
+        - np.asarray(actual_states, dtype=float)
+    )
+
 
 
 def update_feedforward(feedforward, gain, error):
@@ -39,7 +48,9 @@ def update_feedforward(feedforward, gain, error):
 
     error has shape (101,2), including the initial row; gain has shape (100,202)."""
     # TODO(student, Problem 1.7): Implement update_feedforward using your derivation.
-    raise NotImplementedError("Implement Problem 1.7 update_feedforward")
+    feedforward = np.asarray(feedforward, dtype=float).reshape(-1)
+    error_vector = np.asarray(error, dtype=float).reshape(-1)
+    return feedforward + gain @ error_vector
 
 
 # %% Provided experiment and output

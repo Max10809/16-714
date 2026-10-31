@@ -26,13 +26,35 @@ def cross_cost_block(a, b, p, k, r):
 
     P and K are your saved state cost matrix and gain from Question 1.5."""
     # TODO(student, Problem 2.2): Implement cross_cost_block using your derivation.
-    raise NotImplementedError("Implement Problem 2.2 cross_cost_block")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float).reshape(2, 1)
+    p = np.asarray(p, dtype=float)
+    k = np.asarray(k, dtype=float).reshape(1, 2)
+
+    a_cl = a - b @ k
+    p12 = np.linalg.solve(
+        np.eye(2) - a_cl.T,
+        a_cl.T @ p @ b,
+    )
+    return p12
 
 
 def augmented_gain(a, b, p, p12, r):
     """Return the feedback row for [position, velocity, disturbance], with u = -K_e x_e."""
     # TODO(student, Problem 2.2): Implement augmented_gain using your derivation.
-    raise NotImplementedError("Implement Problem 2.2 augmented_gain")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float).reshape(2, 1)
+    p = np.asarray(p, dtype=float)
+    p12 = np.asarray(p12, dtype=float).reshape(2, 1)
+    r = np.asarray(r, dtype=float).reshape(1, 1)
+
+    h = r + b.T @ p @ b
+    rhs = np.hstack((
+        b.T @ p @ a,
+        b.T @ (p @ b + p12),
+    ))
+    gain = np.linalg.solve(h, rhs)
+    return gain
 
 
 # %% Provided experiment and output

@@ -25,13 +25,25 @@ FILTER_DIR = HERE / "results" / "student_problem_2_4"
 def initial_distribution(initial_state, state_covariance, disturbance_variance):
     """Return the augmented initial mean and covariance from Question 2.1."""
     # TODO(student, Problem 2.5): Implement initial_distribution using your derivation.
-    raise NotImplementedError("Implement Problem 2.5 initial_distribution")
+    initial_state = np.asarray(initial_state, dtype=float).reshape(2)
+    state_covariance = np.asarray(state_covariance, dtype=float)
+
+    mean = np.concatenate([initial_state, [0.0]])
+    covariance = np.zeros((3, 3))
+    covariance[:2, :2] = state_covariance
+    covariance[2, 2] = disturbance_variance
+
+    return mean, covariance
 
 
 def feedback_control(estimate, gain):
     """Return the scalar control using the augmented posterior state estimate."""
     # TODO(student, Problem 2.5): Implement feedback_control using your derivation.
-    raise NotImplementedError("Implement Problem 2.5 feedback_control")
+    estimate = np.asarray(estimate, dtype=float).reshape(3)
+    gain = np.asarray(gain, dtype=float).reshape(1, 3)
+
+    return -(gain @ estimate).item()
+
 
 
 def kalman_step(previous_estimate, previous_control, measurement, a, b, c, gain):
@@ -39,7 +51,18 @@ def kalman_step(previous_estimate, previous_control, measurement, a, b, c, gain)
 
     The driver calls this for times 1 through 99. The time-0 estimate is the prior mean."""
     # TODO(student, Problem 2.5): Implement kalman_step using your derivation.
-    raise NotImplementedError("Implement Problem 2.5 kalman_step")
+    previous_estimate = np.asarray(
+        previous_estimate, dtype=float
+    ).reshape(3)
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float).reshape(3)
+    c = np.asarray(c, dtype=float).reshape(1, 3)
+    gain = np.asarray(gain, dtype=float).reshape(3)
+
+    predicted = a @ previous_estimate + b * previous_control
+    innovation = float(measurement) - (c @ predicted).item()
+
+    return predicted + gain * innovation
 
 
 # %% Provided experiment and output

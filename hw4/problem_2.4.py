@@ -26,7 +26,19 @@ def augmented_model(a, b, c):
 
     Their shapes are (3,3), (3,1), (1,3), and (3,1), respectively."""
     # TODO(student, Problem 2.4): Implement augmented_model using your derivation.
-    raise NotImplementedError("Implement Problem 2.4 augmented_model")
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float).reshape(2, 1)
+    c = np.asarray(c, dtype=float).reshape(1, 2)
+
+    a_e = np.block([
+        [a, b],
+        [np.zeros((1, 2)), np.ones((1, 1))],
+    ])
+    b_e = np.vstack([b, np.zeros((1, 1))])
+    c_e = np.hstack([c, np.zeros((1, 1))])
+    d = np.array([[0.0], [0.0], [1.0]])
+
+    return a_e, b_e, c_e, d
 
 
 def steady_covariance(a, c, d, process_variance, measurement_variance):
@@ -34,13 +46,36 @@ def steady_covariance(a, c, d, process_variance, measurement_variance):
 
     Use the covariance equations from Question 2.3."""
     # TODO(student, Problem 2.4): Implement steady_covariance using your derivation.
-    raise NotImplementedError("Implement Problem 2.4 steady_covariance")
+    a = np.asarray(a, dtype=float)
+    c = np.asarray(c, dtype=float).reshape(1, 3)
+    d = np.asarray(d, dtype=float).reshape(3, 1)
+
+    process_covariance = process_variance * (d @ d.T)
+    measurement_covariance = np.asarray(
+        measurement_variance, dtype=float
+    ).reshape(1, 1)
+
+    return solve_discrete_are(
+        a.T, c.T, process_covariance, measurement_covariance
+    )
 
 
 def kalman_gain(covariance, c, measurement_variance):
     """Return the measurement-update gain as a (3,1) array."""
     # TODO(student, Problem 2.4): Implement kalman_gain using your derivation.
-    raise NotImplementedError("Implement Problem 2.4 kalman_gain")
+    covariance = np.asarray(covariance, dtype=float)
+    c = np.asarray(c, dtype=float).reshape(1, 3)
+    measurement_covariance = np.asarray(
+        measurement_variance, dtype=float
+    ).reshape(1, 1)
+
+    innovation_covariance = (
+        c @ covariance @ c.T + measurement_covariance
+    )
+    return np.linalg.solve(
+        innovation_covariance,
+        c @ covariance.T,
+    ).T
 
 
 # %% Provided experiment and output
