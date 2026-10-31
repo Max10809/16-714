@@ -1,0 +1,4 @@
+# Standalone HW5 dependencies; SPARK is not required.
+numpy
+scipy
+matplotlib
